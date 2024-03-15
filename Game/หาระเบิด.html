@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minesweeper Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        
+        .grid {
+            display: inline-grid;
+            grid-template-columns: repeat(8, 40px);
+            grid-gap: 2px;
+        }
+        
+        .cell {
+            width: 40px;
+            height: 40px;
+            background-color: #8a8a8a;
+            border: 1px solid #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .bomb {
+            background-color: red;
+        }
+        
+        .checked {
+            background-color: #bbb;
+        }
+        
+        .flag {
+            background-color: yellow;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Minesweeper Game</h1>
+    <p>Mines Left: <span id="mines-left">10</span></p>
+    <p>Time: <span id="time">0</span> seconds</p>
+    <div id="grid" class="grid"></div>
+    <button onclick="init()">New Game</button>
+
+    <script>
+        const grid = document.getElementById('grid');
+        const minesLeft = document.getElementById('mines-left');
+        const time = document.getElementById('time');
+        let width = 8;
+        let bombAmount = 10;
+        let squares = [];
+        let isGameOver = false;
+        let timer;
+        let count = 0;
+
+        // Initialize new game
+        function init() {
+            // Clear previous game
+            grid.innerHTML = '';
+            squares = [];
+            isGameOver = false;
+            count = 0;
+            minesLeft.textContent = bombAmount;
+            clearInterval(timer);
+            time.textContent = count;
+
+            // Create a new game
+            createBoard();
+
+            // Start timer
+            timer = setInterval(() => {
+                time.textContent = ++count;
+            }, 1000);
+        }
+
+        // Create Board
+        function createBoard() {
+            // Shuffle the grid with bombs
+            const bombsArray = Array(bombAmount).fill('bomb');
+            const emptyArray = Array(width * width - bombAmount).fill('valid');
+            const gameArray = emptyArray.concat(bombsArray);
+            const shuffledArray = gameArray.sort(() => 0.5 - Math.random());
+
+            for (let i = 0; i < width * width; i++) {
+                const square = document.createElement('div');
+                square.setAttribute('id', i);
+                square.classList.add(shuffledArray[i]);
+                grid.appendChild(square);
+                squares.push(square);
+
+                // Normal click
+                square.addEventListener('click', function(e) {
+                    click(square);
+                });
+
+                // Right click
+                square.oncontextmenu = function(e) {
+                    e.preventDefault();
+                    addFlag(square);
+                }
+            }
+        }
+
+        // Click on square actions
+        function click(square) {
+            if (isGameOver) return;
+            if (square.classList.contains('checked') || square.classList.contains('flag')) return;
+            if (square.classList.contains('bomb')) {
+                gameOver();
+            } else {
+                square.classList.add('checked');
+            }
+        }
+
+        // Add Flag with right click
+        function addFlag(square) {
+            if (isGameOver) return;
+            if (!square.classList.contains('checked') && (minesLeft.textContent > 0)) {
+                if (!square.classList.contains('flag')) {
+                    square.classList.add('flag');
+                    square.innerHTML = '🚩';
+                    minesLeft.textContent--;
+                } else {
+                    square.classList.remove('flag');
+                    square.innerHTML = '';
+                    minesLeft.textContent++;
+                }
+            }
+        }
+
+        // Game Over
+        function gameOver() {
+            console.log('BOOM! Game Over!');
+            isGameOver = true;
+
+            // Show all the bombs
+            squares.forEach(square => {
+                if (square.classList.contains('bomb')) {
+                    square.innerHTML = '💣';
+                }
+            });
+
+            clearInterval(timer);
+        }
+
+        init(); // Start the game
+    </script>
+</body>
+
+</html>
